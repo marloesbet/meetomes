@@ -1,0 +1,184 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Nov  9 10:39:38 2022
+
+Script to correlate both global and local network measures to the relative proportions of distinct hub types
+Also creates a heatmap of these correlations
+
+@author: m.bet
+"""
+
+#%%
+#0. Load packages and set wd
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
+import scipy.stats
+from scipy.stats import pearsonr
+import os
+import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure
+
+os.chdir('/mnt/resource/m.bet')
+
+#%%
+#1. Load data
+# For correlations to global measures (hub proportions per meeting)
+glob = pd.read_csv('globalmeasures.txt', sep='\t', header=0)
+glob = glob.iloc[:,0:-1]
+
+#For correlations to local measures (hub proportions per person)
+local = pd.read_csv('localmeasures.txt', sep='\t', header=0)
+
+#Average connectivity matrix over all meetomes (for figure made in pp)
+avg_mat = pd.read_csv('avg_mat.txt',sep='\t',header=None)
+avg_mat_excl= avg_mat.drop([2,4,6,12,13,18,20,27,28,29,30],axis=0)
+avg_mat_excl_mult = avg_mat_excl*100
+
+#%%
+#2. Calculate correlations with global network measures
+corrmat_glob = glob.corr()
+#Select only relevant correlations with network measures as columns
+corrmat_glob = corrmat_glob.iloc[0:6,6:8]
+
+#%%
+#3. Calculate corresponding p-values for global measures
+def calculate_pvalues(df):
+    dfcols = pd.DataFrame(columns=df.columns)
+    pvalues = dfcols.transpose().join(dfcols, how='outer')
+    for r in df.columns:
+        for c in df.columns:
+            tmp = df[df[r].notnull() & df[c].notnull()]
+            pvalues[r][c] = round(pearsonr(tmp[r], tmp[c])[1], 4)
+    return pvalues
+
+pvals_glob = calculate_pvalues(glob)
+#Select only relevant correlations with network measures as columns
+pvalmat_glob = pvals_glob.iloc[0:6,6:8]
+
+#Bonferroni correction for global measures (2*6)
+pvalmat_glob_bonf = pvalmat_glob * 12
+
+#%%
+#4. Linear mixed model for local measures because nested data
+#Take out rows that contain missing data (optional???)
+local_data = local.dropna()
+
+coefs_chair = [] # to make into dataframe later
+coefs_skep = []
+coefs_exp = []
+coefs_clar = []
+coefs_conn = []
+coefs_prac = []
+pvals_chair = []
+pvals_skep = []
+pvals_exp = []
+pvals_clar = []
+pvals_conn = []
+pvals_prac = []
+
+# Correlate each hub type to each network measure by looping over datapoints in columns containing network measures
+    #Chair
+for item in local_data.iloc[:,8:]:
+    string = "{} ~ chair".format(item)
+    md = smf.mixedlm(string, local_data, groups=local_data["name"])
+    mdf = md.fit()
+    print(string)
+    print(mdf.params)
+    print(mdf.pvalues)
+    coefs_chair.append(mdf.params[1])
+    pvals_chair.append(mdf.pvalues[1])
+    
+    #Skeptic    
+for item in local_data.iloc[:,8:]:
+    string = "{} ~ skeptic".format(item)
+    md = smf.mixedlm(string, local_data, groups=local_data["name"])
+    mdf = md.fit()
+    print(string)
+    print(mdf.params)
+    print(mdf.pvalues)
+    coefs_skep.append(mdf.params[1])
+    pvals_skep.append(mdf.pvalues[1])
+    
+    #Expert    
+for item in local_data.iloc[:,8:]:
+    string = "{} ~ expert".format(item)
+    md = smf.mixedlm(string, local_data, groups=local_data["name"])
+    mdf = md.fit()
+    print(string)
+    print(mdf.params)
+    print(mdf.pvalues)
+    coefs_exp.append(mdf.params[1])
+    pvals_exp.append(mdf.pvalues[1])
+
+    #Clarifier
+for item in local_data.iloc[:,8:]:
+    string = "{} ~ clarifier".format(item)
+    md = smf.mixedlm(string, local_data, groups=local_data["name"])
+    mdf = md.fit()
+    print(string)
+    print(mdf.params)
+    print(mdf.pvalues)
+    coefs_clar.append(mdf.params[1])
+    pvals_clar.append(mdf.pvalues[1])
+
+    #Connector
+for item in local_data.iloc[:,8:]:
+    string = "{} ~ connector".format(item)
+    md = smf.mixedlm(string, local_data, groups=local_data["name"])
+    mdf = md.fit()
+    print(string)
+    print(mdf.params)
+    print(mdf.pvalues)
+    coefs_conn.append(mdf.params[1])
+    pvals_conn.append(mdf.pvalues[1])
+    
+    #Practical Joe
+for item in local_data.iloc[:,8:]:
+    string = "{} ~ practical".format(item)
+    md = smf.mixedlm(string, local_data, groups=local_data["name"])
+    mdf = md.fit()
+    print(string)
+    print(mdf.params)
+    print(mdf.pvalues)
+    coefs_prac.append(mdf.params[1])
+    pvals_prac.append(mdf.pvalues[1])
+
+#%%
+#5. Create correlation matrices for local measures to plot
+
+#Organize local coeffs as list of lists such that they can be converted to df
+coefs=[coefs_chair,coefs_skep,coefs_exp,coefs_clar,coefs_conn,coefs_prac]
+pvals=[pvals_chair,pvals_skep,pvals_exp,pvals_clar,pvals_conn,pvals_prac]
+
+#Row and column labels
+ntwrkmsrs = ['local_eff', 'nod_str', 'partcoef', 'wmdegree', 'betwcent']
+hubs = ['chair','skeptic','expert','clarifier','connector','practical']
+
+corrmat_local = pd.DataFrame(coefs,columns=ntwrkmsrs,index=hubs)
+pvalmat_local = pd.DataFrame(pvals,columns=ntwrkmsrs,index=hubs)
+
+#Bonferroni correction for local measures (5*6)
+pvalmat_local_bonf = pvalmat_local * 30
+
+#Concatenate global and local matrices
+corrmat_total = np.concatenate((corrmat_glob, corrmat_local), axis=1)
+pvalmat_total = np.concatenate((pvalmat_glob, pvalmat_local), axis=1)
+pvalmat_total_bonf = np.concatenate((pvalmat_glob_bonf, pvalmat_local_bonf),axis=1)
+
+#%%
+#6. Create heatmap matrix plot
+netwmeasures=['Local efficiency','Nodal strength','Participation coefficient','Within-module degree','Betweenness centrality']
+hubtypes=['Chair','Skeptic','Expert','Clarifier','Connector', 'Practical Joe']
+plot = sns.heatmap(corrmat_local, xticklabels=netwmeasures, yticklabels=hubtypes, cmap='flare') # put abs if you want no distinction between positive/negative correlations!
+plot.set(xlabel="Network measure", ylabel="Hub type")
+plot.set_title('Correlations between hub proportions and network measures')
+
+#make sure that ticks are shown diagonally below the figure
+plt.setp(plot.get_xticklabels(), rotation=45, ha="right",
+         rotation_mode="anchor")
+plt.show()
