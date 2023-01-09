@@ -192,7 +192,7 @@ output.to_excel("output.xlsx")
             
 #%%
 
-#6. Create a heatmap of the nodal network measure correlations
+#5. Create a heatmap of the nodal network measure correlations
 #Put the correlation coefficients that you want to plot in a matrix
 r_values=['chair_r','skeptic_r','expert_r','clarifier_r','connector_r','practical_r']
 mat = output.loc['local_eff':'betwcent',r_values].astype(float) #subset of the output
@@ -211,7 +211,7 @@ plt.show()
 
 #%%
 
-# Calculate correlations with global measures
+#6. Calculate correlations with global measures
 globaldata = pd.read_excel('globaldata.xlsx')
 
 #Make correlation matrix
