@@ -123,7 +123,9 @@ for row_item in q_items: #cells containing evaluations
             print('R: '+ str(r))
             print('P-value: '+ str(mdf.pvalues[1]))
             print('Bonferroni-corrected P: '+ str(mdf.pvalues[1].astype(float) * 48)) #6 roles * 8 questionnaire items = 48 tests
-    
+
+#%%
+            
 #4. Correlate proportions of role-specific actions to network measures
 #Subset only the data that you need for these analysis and drop NA values
 data_ntwrk = data.iloc[:,0:13].dropna() #dropping NAs here prevents loss of data (some ppl have meeting evaluations but no network data, and vice versa)
