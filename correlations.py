@@ -25,7 +25,7 @@ from matplotlib.pyplot import figure
 import warnings
 warnings.filterwarnings('ignore')
 
-os.chdir('C:/Users/marlo/Documents/Meetomes')
+os.chdir('/home/anw/mdbet/my-scratch/meetomes')
 
 #%%
 
