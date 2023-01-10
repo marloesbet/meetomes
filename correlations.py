@@ -218,4 +218,3 @@ globmat.loc['GE_norm_p'] = pvals.loc['GE_norm'] #transfer p-values to row undern
 
 #Save output files
 globmat.to_excel("global_corrcoefs.xlsx")
-pvals.to_excel("global_pvalues.xlsx")
