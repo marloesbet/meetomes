@@ -217,4 +217,4 @@ globmat.loc['modularity_p'] = pvals.loc['modularity'] #add modularity p-values t
 globmat.loc['GE_norm_p'] = pvals.loc['GE_norm'] #transfer p-values to row underneath GE coefs
 
 #Save output files
-globmat.to_excel("global_corrcoefs.xlsx")
+globmat.to_excel("globalmeasures.xlsx")
