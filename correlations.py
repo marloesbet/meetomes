@@ -9,17 +9,17 @@ This file includes all analyses performed as part of the "Meetomes" project. Aft
 #%%
 
 #0. Import packages, suppress warnings, set working directory
-import numpy as np
-import pandas as pd
-import statsmodels.api as sm
+import numpy as np #v1.23.5
+import pandas as pd #v1.5.2
+import statsmodels.api as sm #v0.13.2
 import statsmodels.formula.api as smf
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
-from scipy import stats
+from scipy import stats #v1.9.3
 import scipy.stats
 from scipy.stats import pearsonr
-import os
-import seaborn as sns
-import matplotlib.pyplot as plt
+import os #v???
+import seaborn as sns #v0.12.1
+import matplotlib.pyplot as plt #v3.6.2
 from matplotlib.pyplot import figure
 
 import warnings
